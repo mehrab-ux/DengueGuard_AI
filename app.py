@@ -2,7 +2,6 @@ import sys
 from datetime import datetime
 from pathlib import Path
 
-import pandas as pd
 import streamlit as st
 
 ROOT = Path(__file__).resolve().parent
@@ -125,6 +124,86 @@ def level_bar(level, color):
         for i in range(4)
     )
     return f'<div class="level-bar">{segments}</div>'
+
+
+# ----------------------------------------------------------------------------
+# Charts: shiny white on ash (pure HTML/SVG, animated)
+# ----------------------------------------------------------------------------
+def _chart_head(title, unit, latest):
+    return (
+        f'<div class="ch-head"><span class="ch-title">{title}</span>'
+        f'<span class="ch-now">{latest:g}<small>{unit}</small></span></div>'
+    )
+
+
+def bar_chart_html(title, unit, labels, values, zero_based=True):
+    vmax, vmin = max(values), min(values)
+    cols = []
+    for i, (lab, v) in enumerate(zip(labels, values)):
+        if zero_based:
+            h = max(v / vmax * 100, 6) if vmax > 0 else 6
+        else:
+            span = vmax - vmin
+            h = 30 + (v - vmin) / span * 70 if span > 0 else 65
+        h *= 0.86  # leave room for the value label
+        latest = " latest" if i == len(values) - 1 else ""
+        cols.append(
+            f'<div class="bar-col"><div class="bar-track">'
+            f'<div class="bar-val" style="--i:{i}">{v:g}</div>'
+            f'<div class="bar{latest}" style="--h:{h:.1f}%;--i:{i}"></div></div>'
+            f'<div class="bar-lbl">{lab}</div></div>'
+        )
+    return (
+        '<div class="chart-card">'
+        + _chart_head(title, unit, values[-1])
+        + f'<div class="bars">{"".join(cols)}</div></div>'
+    )
+
+
+def line_chart_html(title, unit, labels, values):
+    w, h = 400, 250
+    pl, pr, pt, pb = 26, 26, 46, 44
+    n = len(values)
+    lo, hi = min(values), max(values)
+    if hi - lo < 1e-9:
+        lo, hi = lo - 1, hi + 1
+    pad = (hi - lo) * 0.25
+    lo, hi = lo - pad, hi + pad
+    base = h - pb
+    xs = [pl + i * (w - pl - pr) / (n - 1) for i in range(n)]
+    ys = [pt + (hi - v) / (hi - lo) * (base - pt) for v in values]
+
+    d = f"M{xs[0]:.1f},{ys[0]:.1f}"
+    for i in range(1, n):
+        cx = (xs[i - 1] + xs[i]) / 2
+        d += f" C{cx:.1f},{ys[i - 1]:.1f} {cx:.1f},{ys[i]:.1f} {xs[i]:.1f},{ys[i]:.1f}"
+    area = f"{d} L{xs[-1]:.1f},{base} L{xs[0]:.1f},{base} Z"
+
+    uid = "".join(ch for ch in title.lower() if ch.isalnum())
+    grid = "".join(
+        f'<line class="ln-grid" x1="{pl}" x2="{w - pr}" y1="{y:.1f}" y2="{y:.1f}"/>'
+        for y in [pt, pt + (base - pt) / 2, base]
+    )
+    marks = []
+    for i, (x, y, v, lab) in enumerate(zip(xs, ys, values, labels)):
+        if i == n - 1:
+            marks.append(
+                f'<circle class="ln-ring" cx="{x:.1f}" cy="{y:.1f}" r="6"/>'
+            )
+        marks.append(
+            f'<circle class="ln-dot" style="--i:{i}" cx="{x:.1f}" cy="{y:.1f}" r="5.5"/>'
+            f'<text class="ln-val" style="--i:{i}" x="{x:.1f}" y="{y - 15:.1f}">{v:g}</text>'
+            f'<text class="ln-lbl" x="{x:.1f}" y="{h - 14}">{lab}</text>'
+        )
+    svg = (
+        f'<svg class="line-svg" viewBox="0 0 {w} {h}" xmlns="http://www.w3.org/2000/svg">'
+        f'<defs><linearGradient id="a-{uid}" x1="0" y1="0" x2="0" y2="1">'
+        f'<stop offset="0%" stop-color="#fff" stop-opacity="0.42"/>'
+        f'<stop offset="100%" stop-color="#fff" stop-opacity="0"/></linearGradient></defs>'
+        f'{grid}<path class="ln-area" d="{area}" fill="url(#a-{uid})"/>'
+        f'<path class="ln-line" pathLength="1" d="{d}"/>{"".join(marks)}</svg>'
+    )
+    return '<div class="chart-card">' + _chart_head(title, unit, values[-1]) + svg + "</div>"
 
 
 # ----------------------------------------------------------------------------
@@ -413,7 +492,106 @@ div.stFormSubmitButton > button:active {transform: translateY(0);}
 [data-testid="stMetricLabel"] p {font-size: 12.5px !important; color: #8E8E96;}
 [data-testid="stMetricValue"] {font-weight: 700; color: #fff;}
 
-.chart-label {font-size: 13px; font-weight: 500; color: #A1A1AA; margin-bottom: 6px;}
+/* ---------- Charts (shiny white on ash) ---------- */
+@keyframes rise {from {height: 0;}}
+@keyframes glint {
+    0%   {bottom: -50%; opacity: 0;}
+    15%  {opacity: 1;}
+    70%  {opacity: 0.9;}
+    100% {bottom: 105%; opacity: 0;}
+}
+@keyframes draw {to {stroke-dashoffset: 0;}}
+@keyframes fadeIn {to {opacity: 1;}}
+@keyframes ring {
+    0%   {transform: scale(1); opacity: 0.7;}
+    100% {transform: scale(3.2); opacity: 0;}
+}
+
+.chart-card {
+    position: relative;
+    padding: 20px 22px 16px 22px;
+    min-height: 300px;
+    border-radius: 20px;
+    border: 1px solid rgba(255,255,255,0.11);
+    background:
+        radial-gradient(circle at 50% -10%, rgba(255,255,255,0.13) 0%, transparent 55%),
+        linear-gradient(160deg, #2B2C30 0%, #18191C 100%);
+    box-shadow: 0 16px 44px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.10);
+    transition: transform .4s cubic-bezier(.2,.8,.2,1), border-color .4s ease, box-shadow .4s ease;
+    animation: fadeUp .9s cubic-bezier(.2,.8,.2,1) both;
+}
+.chart-card:hover {
+    transform: translateY(-5px);
+    border-color: rgba(255,255,255,0.26);
+    box-shadow: 0 22px 54px rgba(0,0,0,0.55), 0 0 40px rgba(255,255,255,0.06), inset 0 1px 0 rgba(255,255,255,0.14);
+}
+.ch-head {display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 16px;}
+.ch-title {font-size: 11.5px; font-weight: 600; letter-spacing: 1.7px; text-transform: uppercase; color: #A1A1AA;}
+.ch-now {font-size: 27px; font-weight: 800; color: #fff; text-shadow: 0 0 22px rgba(255,255,255,0.6);}
+.ch-now small {font-size: 12px; font-weight: 500; color: #A1A1AA; margin-left: 4px; text-shadow: none;}
+
+.bars {
+    display: flex; gap: 12px;
+    background-image: linear-gradient(rgba(255,255,255,0.07) 1px, transparent 1px);
+    background-size: 100% 44px;
+}
+.bar-col {flex: 1; display: flex; flex-direction: column; align-items: center;}
+.bar-track {height: 175px; width: 100%; display: flex; flex-direction: column; justify-content: flex-end; align-items: center;}
+.bar-val {
+    font-size: 12px; font-weight: 600; color: #F4F4F5; margin-bottom: 7px;
+    opacity: 0; animation: fadeIn .6s ease forwards;
+    animation-delay: calc(var(--i) * 0.12s + 0.8s);
+}
+.bar {
+    position: relative; overflow: hidden;
+    width: min(100%, 48px); height: var(--h);
+    border-radius: 13px 13px 4px 4px;
+    background: linear-gradient(180deg, #FFFFFF 0%, rgba(255,255,255,0.64) 42%, rgba(255,255,255,0.14) 100%);
+    box-shadow: 0 0 26px rgba(255,255,255,0.28), inset 0 1px 0 #fff;
+    animation: rise 1s cubic-bezier(.2,.8,.2,1) both;
+    animation-delay: calc(var(--i) * 0.12s);
+}
+.bar.latest {box-shadow: 0 0 42px rgba(255,255,255,0.6), inset 0 1px 0 #fff;}
+.bar::before {
+    content: ""; position: absolute; top: 0; bottom: 0; left: 16%; width: 14%;
+    border-radius: 8px;
+    background: linear-gradient(180deg, rgba(255,255,255,0.95), rgba(255,255,255,0));
+    opacity: 0.55;
+}
+.bar::after {
+    content: ""; position: absolute; left: 0; right: 0; height: 45%;
+    background: linear-gradient(180deg, transparent, rgba(255,255,255,0.95), transparent);
+    animation: glint 3.4s ease-in-out infinite;
+    animation-delay: calc(var(--i) * 0.35s + 1s);
+}
+.bar-lbl {font-size: 11.5px; font-weight: 500; color: #8E8E96; margin-top: 11px;}
+
+.line-svg {width: 100%; height: auto; display: block;}
+.ln-grid {stroke: rgba(255,255,255,0.09); stroke-dasharray: 3 6;}
+.ln-line {
+    fill: none; stroke: #fff; stroke-width: 3.2; stroke-linecap: round;
+    stroke-dasharray: 1; stroke-dashoffset: 1;
+    filter: drop-shadow(0 0 5px rgba(255,255,255,0.95)) drop-shadow(0 0 14px rgba(255,255,255,0.5));
+    animation: draw 1.8s cubic-bezier(.4,.1,.2,1) .2s forwards;
+}
+.ln-area {opacity: 0; animation: fadeIn 1.2s ease 1s forwards;}
+.ln-dot {
+    fill: #fff; stroke: #1B1C1F; stroke-width: 3;
+    filter: drop-shadow(0 0 6px #fff);
+    opacity: 0; animation: fadeIn .5s ease forwards;
+    animation-delay: calc(var(--i) * 0.35s + 0.5s);
+}
+.ln-ring {
+    fill: none; stroke: #fff; stroke-width: 1.5;
+    transform-box: fill-box; transform-origin: center;
+    animation: ring 2.2s ease-out infinite;
+}
+.ln-val {
+    fill: #F4F4F5; font-size: 12px; font-weight: 600; text-anchor: middle;
+    opacity: 0; animation: fadeIn .5s ease forwards;
+    animation-delay: calc(var(--i) * 0.35s + 0.7s);
+}
+.ln-lbl {fill: #8E8E96; font-size: 11.5px; font-weight: 500; text-anchor: middle;}
 
 /* ---------- Sidebar ---------- */
 section[data-testid="stSidebar"] {
@@ -657,26 +835,27 @@ if submitted:
             """,
             unsafe_allow_html=True,
         )
-        order = [3, 2, 1, 0]
-        trend = pd.DataFrame(
-            {
-                "Week": [WEEK_LABELS[i] for i in order],
-                "Temperature (°C)": [temps[i] for i in order],
-                "Rainfall (mm)": [rains[i] for i in order],
-                "Humidity (%)": [hums[i] for i in order],
-            }
-        ).set_index("Week")
+        order = [3, 2, 1, 0]  # 4 weeks ago -> 1 week ago
+        short = ["4w ago", "3w ago", "2w ago", "1w ago"]
 
-        t1, t2, t3 = st.columns(3)
+        t1, t2, t3 = st.columns(3, gap="medium")
         with t1:
-            st.markdown('<div class="chart-label">Temperature (°C)</div>', unsafe_allow_html=True)
-            st.line_chart(trend[["Temperature (°C)"]], height=200, color="#FFFFFF")
+            st.markdown(
+                line_chart_html("Temperature", "°C", short, [temps[i] for i in order]),
+                unsafe_allow_html=True,
+            )
         with t2:
-            st.markdown('<div class="chart-label">Rainfall (mm)</div>', unsafe_allow_html=True)
-            st.bar_chart(trend[["Rainfall (mm)"]], height=200, color="#FFFFFF")
+            st.markdown(
+                bar_chart_html("Rainfall", "mm", short, [rains[i] for i in order]),
+                unsafe_allow_html=True,
+            )
         with t3:
-            st.markdown('<div class="chart-label">Humidity (%)</div>', unsafe_allow_html=True)
-            st.line_chart(trend[["Humidity (%)"]], height=200, color="#FFFFFF")
+            st.markdown(
+                bar_chart_html(
+                    "Humidity", "%", short, [hums[i] for i in order], zero_based=False
+                ),
+                unsafe_allow_html=True,
+            )
 
     except Exception as e:
         st.error(f"Prediction failed: {e}")
