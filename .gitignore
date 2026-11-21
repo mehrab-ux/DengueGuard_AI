@@ -3,3 +3,23 @@ __pycache__/
 *.pyc
 .env
 .ipynb_checkpoints/
+
+# Virtual environment
+venv/
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Environment variables
+.env
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Trained machine learning models
+Dataset/models/*.joblib
+
+# Temporary files
+*.log
+.DS_Store
