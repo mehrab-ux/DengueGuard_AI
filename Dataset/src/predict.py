@@ -59,6 +59,6 @@ sample_input = {
     "relative_humidity_pct_lag_4": 85.0
 }
 
-result = predict_dengue_risk(sample_input)
-
-print("\nPredicted Dengue Risk:", result)
+if __name__ == "__main__":
+    result = predict_dengue_risk(sample_input)
+    print("\nPredicted Dengue Risk:", result)
