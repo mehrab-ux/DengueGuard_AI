@@ -1,31 +1,34 @@
-# 🦟 DengueGuard AI
-### AI-Powered Dengue Risk Prediction System
+# DengueGuard AI
 
-DengueGuard AI is a machine learning-based system designed to predict dengue risk levels using historical dengue cases and weather-related data. It aims to support early awareness and help identify areas that may require closer attention.
+**AI-Powered Dengue Risk Prediction System**
 
-## 🚀 Project Overview
+DengueGuard AI is a machine learning-based system that predicts dengue risk levels from historical dengue cases and weather-related data. It is intended to support early awareness and help identify areas that may require closer attention.
 
-Dengue is a major public health concern in Bangladesh. DengueGuard AI uses historical data and machine learning techniques to classify dengue risk into four categories:
+## Project Overview
 
-- 🟢 **Low**
-- 🟡 **Medium**
-- 🟠 **High**
-- 🔴 **Critical**
+Dengue is a major public health concern in Bangladesh. DengueGuard AI applies machine learning to historical data to classify dengue risk into four categories:
 
-The system provides an interactive dashboard built with Streamlit, allowing users to enter relevant environmental and historical dengue information and receive a predicted risk category.
+| Level | Description |
+|---|---|
+| **Low** | Lowest risk category |
+| **Medium** | Moderate risk category |
+| **High** | Elevated risk category |
+| **Critical** | Highest risk category |
 
-## ✨ Key Features
+The system includes an interactive dashboard built with Streamlit. Users enter environmental and historical dengue information and receive a predicted risk category.
 
-- Machine learning-based dengue risk classification.
-- Four risk categories: Low, Medium, High, and Critical.
-- Historical dengue case information.
-- Weather-based features, including temperature, rainfall, and humidity.
-- Lag-based feature engineering.
-- Interactive Streamlit dashboard.
-- Risk-specific recommendations.
-- Model comparison and experimentation.
+## Key Features
 
-## 🧠 Machine Learning Approach
+- Machine learning-based dengue risk classification
+- Four risk categories: Low, Medium, High and Critical
+- Historical dengue case information
+- Weather-based features, including temperature, rainfall and humidity
+- Lag-based feature engineering
+- Interactive Streamlit dashboard
+- Risk-specific recommendations
+- Model comparison and experimentation
+
+## Machine Learning Approach
 
 The project uses historical dengue and weather data to predict the next week's dengue risk category.
 
@@ -33,11 +36,13 @@ The project uses historical dengue and weather data to predict the next week's d
 
 The model uses 14 input features:
 
-- Ward ID
-- Previous week's dengue cases
-- Average temperature from the previous four weeks
-- Rainfall from the previous four weeks
-- Relative humidity from the previous four weeks
+| Feature group | Number of features |
+|---|---|
+| Ward ID | 1 |
+| Previous week's dengue cases | 1 |
+| Average temperature, previous four weeks | 4 |
+| Rainfall, previous four weeks | 4 |
+| Relative humidity, previous four weeks | 4 |
 
 ### Data Processing
 
@@ -56,7 +61,7 @@ The model uses 14 input features:
 
 Multiple models were evaluated to compare classification performance, particularly their ability to identify higher-risk categories.
 
-## 📊 Dashboard
+## Dashboard
 
 The application is developed using Streamlit and provides:
 
@@ -67,17 +72,17 @@ The application is developed using Streamlit and provides:
 - Project information
 - Insights into the prediction process
 
-## 🛠️ Technologies Used
+## Technologies Used
 
-- Python
-- Pandas
-- NumPy
-- Scikit-learn
-- Imbalanced-learn
-- Joblib
-- Streamlit
+| Area | Tools |
+|---|---|
+| Language | Python |
+| Data handling | Pandas, NumPy |
+| Machine learning | Scikit-learn, Imbalanced-learn |
+| Model storage | Joblib |
+| Dashboard | Streamlit |
 
-## 📁 Project Structure
+## Project Structure
 
 ```text
 DengueGuard_AI/
@@ -101,7 +106,7 @@ DengueGuard_AI/
         └── predict.py
 ```
 
-## ⚙️ Installation and Setup
+## Installation and Setup
 
 ### 1. Clone the repository
 
@@ -132,7 +137,7 @@ Windows PowerShell:
 ### 5. Install dependencies
 
 ```bash
-pip install pandas numpy scikit-learn imbalanced-learn joblib streamlit
+pip install -r requirements.txt
 ```
 
 ### 6. Prepare the trained model
@@ -157,7 +162,7 @@ streamlit run app.py
 
 The application will open in your browser.
 
-## ⚠️ Important Disclaimer
+## Important Disclaimer
 
 DengueGuard AI is an experimental machine learning project developed for educational and research purposes.
 
@@ -167,10 +172,10 @@ DengueGuard AI is an experimental machine learning project developed for educati
 - The system should not replace professional medical advice or official public health alerts.
 - Model performance may vary when used with new or real-world data.
 
-## 🎯 Project Goal
+## Project Goal
 
 The goal of DengueGuard AI is to explore how machine learning can contribute to dengue risk awareness and support data-driven public health initiatives in Bangladesh.
 
 ---
 
-**Developed as a machine learning and AI project for dengue risk prediction.**
+*Developed as a machine learning and AI project for dengue risk prediction.*
