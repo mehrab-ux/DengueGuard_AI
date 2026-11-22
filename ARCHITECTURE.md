@@ -205,6 +205,47 @@ DengueGuard_AI/
 - Develop automated data updates.
 - Evaluate the model using additional real-world datasets.
 
+## 11. Model Selection Rationale
+
+Multiple machine learning approaches were evaluated to address class imbalance and improve dengue risk classification.
+
+The experiments included:
+
+- Original Random Forest
+- Balanced Random Forest
+- Weighted Random Forest
+- SMOTENC + Balanced Random Forest
+
+SMOTENC + Balanced Random Forest was selected for the current prediction pipeline because it achieved the highest observed test accuracy among the evaluated models (approximately 76.99%).
+
+However, the Weighted Random Forest achieved better Critical-class recall. Therefore, model selection involves a trade-off between overall accuracy and detecting high-risk cases.
+
+The selected model is an experimental decision-support model and requires further validation before real-world public health deployment.
+
+## 12. Compute and API Cost Efficiency
+
+### Model Serialization
+
+Trained machine learning models are saved using Joblib serialization.
+
+This avoids retraining the model whenever the Streamlit application starts.
+
+The prediction pipeline loads the saved model and reuses it for user predictions.
+
+### API Minimization
+
+The current system performs local inference using the saved machine learning model.
+
+It does not require external AI APIs or paid inference services for predictions.
+
+Historical datasets and trained models are stored locally during development.
+
+### LLM and Token Cost Controls
+
+The current application does not depend on an LLM for dengue predictions. Therefore, it does not incur LLM token costs.
+
+Future integrations should use limited API calls, caching, and controlled token usage to minimize operational expenses.
+
 ---
 
 **DengueGuard AI — Exploring AI for Dengue Risk Awareness in Bangladesh.**
